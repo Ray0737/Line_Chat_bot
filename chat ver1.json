@@ -69,6 +69,7 @@ function doPost(e) {
       var Current = sheet.getRange(i,5).getValue();
       if (Current == "Unoccupied"){
         sheet.getRange(i,5).setValue("Occupied").toString();
+        var Current = "Occupied"
       }
       return Result1(Data,Current); // FUNCTION (1) CALLER
       }
