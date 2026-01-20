@@ -1,0 +1,171 @@
+var ss = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/104Hp8VjSYv7ilMI-3D8ZwrL65FIl4gnMqmp8dXN3zWk/edit?usp=sharing");
+var sheet = ss.getSheetByName("STOCK");
+function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+  var userMsg = data.originalDetectIntentRequest.payload.data.message.text;
+  var values = sheet.getRange(2, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
+  var command = userMsg.split(',');
+  
+  // INPUT( CMD" booking/return/check/room book | ID: P001,B001 | Amount:   )
+
+//------------------------------- ACTIVE -------------------------------
+
+  // Condition 01 - Checking Inventory 
+
+  if (command[0] == "check"){ 
+  for (var i = 0; i < values.length; i++) {
+    if (values[i][0] == command[1]) {
+      i = i + 2;
+      var Data = sheet.getRange(i, 2).getValue();
+      var Pic = sheet.getRange(i,6).getValue();
+      var Current = sheet.getRange(i,5).getValue();
+      return Result2(Pic,Data,Current); // FUNCTION (2) CALLER
+      }
+    }
+
+  // Condition 02 - Book Equipment
+
+  } else if (command[0] == "booking"){
+  for (var i = 0; i < values.length; i++) {
+    if (values[i][0] == command[1]) {
+      i = i + 2;
+      var Data = sheet.getRange(i, 2).getValue();
+      var Left = sheet.getRange(i,5).getValue();
+      var Current = parseInt(Left) - parseInt(command[2]);
+      sheet.getRange(i,5).setValue(Current).toString();
+      return Result1(Data,Current); // FUNCTION (1) CALLER
+      }
+    }
+
+  // Condition 03 - Return Equipment
+
+  } else if (command[0] == "return"){
+  for (var i = 0; i < values.length; i++) {
+    if (values[i][0] == command[1]) {
+      i = i + 2;
+      var Left = sheet.getRange(i,5).getValue();
+      var Current = parseInt(Left) + parseInt(command[2]);
+      sheet.getRange(i,5).setValue(Current).toString();
+      return Result1(Data,Current); // FUNCTION (1) CALLER
+      }
+    }
+
+  // Condition 04 - Return Equipment
+
+  } else if (command[0] == "room book"){
+  for (var i = 0; i < values.length; i++) {
+    if (values[i][0] == command[1]) {
+      i = i + 2;
+      var Current = sheet.getRange(i,5).getValue();
+      if (Current == "Unoccupied"){
+        sheet.getRange(i,5).setValue("Occupied").toString();
+      }
+      return Result1(Data,Current); // FUNCTION (1) CALLER
+      }
+    }
+  }
+}  
+
+//------------------------------- MAIN UI -------------------------------
+
+var Pic,Data,Current,Price
+function Result2(Pic,Data,Current,Price){
+  var result = {
+  "fulfillmentMessages": [
+      {
+          "platform": "line",
+          "type": 4,
+          "payload": {
+              "line": {
+                "type": "flex",
+                "altText":"flex message",
+                "contents": {
+                  "type": "bubble",
+                  "hero": {
+                    "type": "image",
+                    "url": Pic,
+                    "size": "full",
+                    "aspectRatio": "20:13",
+                    "aspectMode": "cover",
+                    "action": {
+                      "type": "uri",
+                      "label": "Line",
+                      "uri": "https://linecorp.com/"
+                    }
+                  },
+                  "body": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                      {
+                        "type": "text",
+                        "text": Data,
+                        "weight": "bold",
+                        "size": "xl",
+                        "contents": []
+                      },
+                      {
+                        "type": "box",
+                        "layout": "vertical",
+                        "spacing": "sm",
+                        "margin": "lg",
+                        "contents": [
+                          {
+                            "type": "box",
+                            "layout": "baseline",
+                            "spacing": "sm",
+                            "contents": [
+                              {
+                                "type": "text",
+                                "text": "Current-Status: ",
+                                "size": "sm",
+                                "color": "#AAAAAA",
+                            
+                                "contents": []
+                              },
+                              {
+                                "type": "text",
+                                "text": String(Current),
+                                "size": "sm",
+                                "color": "#666666",
+                          
+                                "wrap": true,
+                                "contents": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+          }
+        }
+      }
+    ]
+  }
+  var replyJSON = ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  return replyJSON;
+}
+
+var Data,Current
+function Result1(Data,Current){
+  var result = {
+  "fulfillmentMessages": [
+      {
+          "platform": "line",
+          "type": 4,
+          "payload": {
+              "line": {
+                "type": "text",
+                "altText":"Entry Saved",
+                "text": "Current "+Data+" amount: "+Current
+
+          }
+        }
+      }
+    ]
+  }
+  var replyJSON = ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  return replyJSON;
+}
