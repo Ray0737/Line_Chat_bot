@@ -6,13 +6,20 @@ function doPost(e) {
   var values = sheet.getRange(2, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
   var command = userMsg.split(',');
   
-  // INPUT( CMD" booking/return/check/room book | ID: P001,B001 | Amount:   )
+  // WARNING: WATCHOUT FOR SPACING AND CAPITAL LETTERS
+  // INPUT( CMD: Ebook/Ereturn/check/Rbook | ID: P001,B001,R1909 | Amount:   )
 
-//------------------------------- ACTIVE -------------------------------
 
-  // Condition 01 - Checking Inventory 
+//------------------------------- CONDITION -------------------------------
 
-  if (command[0] == "check"){ 
+  // Condition 00 - Initiate 
+  
+  if (command[0] == "Start"){ 
+      return Result0(); // FUNCTION (2) CALLER
+
+  // Condition 01 - Book Equipment
+
+  } else if (command[0] == "check"){ 
   for (var i = 0; i < values.length; i++) {
     if (values[i][0] == command[1]) {
       i = i + 2;
@@ -25,7 +32,7 @@ function doPost(e) {
 
   // Condition 02 - Book Equipment
 
-  } else if (command[0] == "booking"){
+  } else if (command[0] == "Ebook"){
   for (var i = 0; i < values.length; i++) {
     if (values[i][0] == command[1]) {
       i = i + 2;
@@ -39,10 +46,12 @@ function doPost(e) {
 
   // Condition 03 - Return Equipment
 
-  } else if (command[0] == "return"){
+  } else if (command[0] == "Ereturn"){
   for (var i = 0; i < values.length; i++) {
     if (values[i][0] == command[1]) {
       i = i + 2;
+      var ID = command[1]
+      var Data = sheet.getRange(i, 2).getValue();
       var Left = sheet.getRange(i,5).getValue();
       var Current = parseInt(Left) + parseInt(command[2]);
       sheet.getRange(i,5).setValue(Current).toString();
@@ -50,12 +59,13 @@ function doPost(e) {
       }
     }
 
-  // Condition 04 - Return Equipment
+  // Condition 04 - Return Equipment [NON OPERATIONAL]
 
-  } else if (command[0] == "room book"){
+  } else if (command[0] == "Rbook"){
   for (var i = 0; i < values.length; i++) {
     if (values[i][0] == command[1]) {
       i = i + 2;
+      var Data = sheet.getRange(i, 2).getValue();
       var Current = sheet.getRange(i,5).getValue();
       if (Current == "Unoccupied"){
         sheet.getRange(i,5).setValue("Occupied").toString();
@@ -66,10 +76,33 @@ function doPost(e) {
   }
 }  
 
+//------------------------------- Intro UI -------------------------------
+
+function Result0(){
+  var result = {
+  "fulfillmentMessages": [
+      {
+          "platform": "line",
+          "type": 4,
+          "payload": {
+              "line": {
+                "type": "text",
+                "altText":"Entry Saved",
+                "text": "INPUT-SYNTAX: (CMD,ID,QTY)| Eg: (Ebook/Ereturn/check/Rbook),(ID: P001,B001,R1909),(Amount: )"
+
+          }
+        }
+      }
+    ]
+  }
+  var replyJSON = ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  return replyJSON;
+}
+
 //------------------------------- MAIN UI -------------------------------
 
 var Pic,Data,Current,Price
-function Result2(Pic,Data,Current,Price){
+function Result2(Pic,Data,Current){
   var result = {
   "fulfillmentMessages": [
       {
@@ -148,6 +181,8 @@ function Result2(Pic,Data,Current,Price){
   return replyJSON;
 }
 
+//------------------------------- Entry noti UI -------------------------------
+
 var Data,Current
 function Result1(Data,Current){
   var result = {
@@ -159,7 +194,7 @@ function Result1(Data,Current){
               "line": {
                 "type": "text",
                 "altText":"Entry Saved",
-                "text": "Current "+Data+" amount: "+Current
+                "text": "CURRENT: "+Data+" STATUS: "+Current
 
           }
         }
