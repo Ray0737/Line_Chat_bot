@@ -1,0 +1,61 @@
+
+{
+  "type": "template",
+  "altText": "this is a carousel template",
+  "template": {
+    "type": "carousel",
+    "columns": [
+      {
+        "thumbnailImageUrl": "https://vos.line-scdn.net/bot-designer-template-images/reservation/pasta.jpeg",
+        "title": "                     Pasta",
+        "text": "        Choose the menu below",
+        "actions": [
+          {
+            "type": "message",
+            "label": "Tomato Pasta",
+            "text": "Tomato Pasta"
+          },
+          {
+            "type": "message",
+            "label": "Olive Pasta",
+            "text": "Olive Pasta"
+          }
+        ]
+      },
+      {
+        "thumbnailImageUrl": "https://vos.line-scdn.net/bot-designer-template-images/reservation/pizza.jpeg",
+        "title": "                     Pizza",
+        "text": "        Choose the menu below",
+        "actions": [
+          {
+            "type": "message",
+            "label": "Super Supreme Pizza",
+            "text": "Super Supreme Pizza"
+          },
+          {
+            "type": "message",
+            "label": "Peperoni",
+            "text": "Peperoni"
+          }
+        ]
+      },
+      {
+        "thumbnailImageUrl": "https://vos.line-scdn.net/bot-designer-template-images/reservation/steak.jpeg",
+        "title": "                     Steak",
+        "text": "       Choose the menu below",
+        "actions": [
+          {
+            "type": "message",
+            "label": "T-Bone Steak",
+            "text": "T-Bone Steak"
+          },
+          {
+            "type": "message",
+            "label": "Ribeye Steak",
+            "text": "Ribeye Steak"
+          }
+        ]
+      }
+    ]
+  }
+}
