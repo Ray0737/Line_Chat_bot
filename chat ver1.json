@@ -7,7 +7,7 @@ function doPost(e) {
   var command = userMsg.split(',');
   
   // WARNING: WATCHOUT FOR SPACING AND CAPITAL LETTERS
-  // INPUT-SYNTAX: (CMD,ID,QTY)| Eg: (CMD: Ebook/Ereturn/check/Rbook/Rreturn),(ID: P001,B001,S001,M001,C001,R1909),(Amount: )
+  // INPUT( CMD: Ebook/Ereturn/check/Rbook/Rreturn | ID: P001,B001,R1909 | Amount:   )
 
 
 //------------------------------- CONDITION -------------------------------
@@ -19,7 +19,7 @@ function doPost(e) {
 
   // Condition 01 - Book Equipment
 
-  } else if (command[0] == "check"){ 
+  } else if (command[0] == "Check"){ 
   for (var i = 0; i < values.length; i++) {
     if (values[i][0] == command[1]) {
       i = i + 2;
@@ -105,7 +105,7 @@ function Result0(){
               "line": {
                 "type": "text",
                 "altText":"Entry Saved",
-                "text": "INPUT-SYNTAX: (CMD,ID,QTY)| Eg: (CMD: Ebook/Ereturn/check/Rbook/Rreturn),(ID: P001,B001,S001,M001,C001,R1909),(Amount: )"
+                "text": "INPUT-SYNTAX: (CMD,ID,QTY)| Eg: (Ebook/Ereturn/check/Rbook/Rreturn),(ID: P001,B001,R1909),(Amount: )"
 
           }
         }
