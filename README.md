@@ -1,4 +1,4 @@
-# Dialogflow + LINE Messenger + Google Sheets Integration
+# LINE CHATBOT
 
 This repository contains the documentation and boilerplate code to build a smart chatbot that uses **Dialogflow** for Natural Language Processing (NLP), **LINE Messenger** as the interface, and **Google Sheets** as a lightweight database.
 
