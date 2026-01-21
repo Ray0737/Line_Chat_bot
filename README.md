@@ -42,7 +42,7 @@ This repository contains the documentation and boilerplate code to build a smart
 
 ---
 
-## 💻 Sample Fulfillment Code (Google Apps Script)
+## Sample Fulfillment Code (Google Apps Script)
 
 ```javascript
 function doPost(e) {
