@@ -1,0 +1,118 @@
+var ss = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/104Hp8VjSYv7ilMI-3D8ZwrL65FIl4gnMqmp8dXN3zWk/edit?usp=sharing");
+var sheet = ss.getSheetByName("Inventory");
+var sheet2 = ss.getSheetByName("Equip Log");
+var sheet3 = ss.getSheetByName("Room Log");
+
+function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+  var userMsg = data.originalDetectIntentRequest.payload.data.message.text;
+  
+  var values = sheet.getRange(2, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
+  var values2 = sheet2.getRange(2, 1, sheet2.getLastRow(), sheet2.getLastColumn()).getValues();
+  var values3 = sheet3.getRange(2, 1, sheet3.getLastRow(), sheet3.getLastColumn()).getValues();
+
+  var command = userMsg.split(',');
+  var action = command[0];
+  var now = new Date();
+  var timestamp = Utilities.formatDate(now, "GMT+7", "dd/MM/yyyy HH:mm:ss");
+
+  // --- FAIL-SAFE VALIDATION ---
+  // Check if User ID is missing or still says "USER" / "USER_ID"
+  var userIdMissing = false;
+
+  if (action == "Ebook" || action == "Ereturn") {
+    if (!command[3] || command[3].trim() == "" || command[3].toUpperCase() == "USER") userIdMissing = true;
+  } 
+  else if (action == "Rbook" || action == "Rreturn") {
+    if (!command[2] || command[2].trim() == "" || command[2].toUpperCase() == "USER") userIdMissing = true;
+  } 
+  else if (action == "Elog" || action == "Rlog") {
+    if (!command[1] || command[1].trim() == "" || command[1].toUpperCase() == "USER_ID") userIdMissing = true;
+  }
+
+  if (userIdMissing) {
+    return Result3("⚠️ Access Denied: Please redo the command and ensure you enter your actual User ID instead of the placeholder.");
+  }
+  // ----------------------------
+
+  // Condition 00 - Carousel Menu
+  if (action == "Start") {
+    return Result0(); 
+  } 
+
+  // Condition 01 - Check Equipment
+  else if (action == "Check") {
+    for (var i = 0; i < values.length; i++) {
+      if (values[i][0] == command[1]) {
+        var rowIdx = i + 2;
+        var Data = sheet.getRange(rowIdx, 2).getValue();
+        var Pic = sheet.getRange(rowIdx, 6).getValue();
+        var Current = sheet.getRange(rowIdx, 5).getValue();
+        return Result2(Pic, Data, Current);
+      }
+    }
+  }
+
+  // Condition 02 - Book Equipment
+  else if (action == "Ebook") {
+    for (var i = 0; i < values.length; i++) {
+      if (values[i][0] == command[1]) {
+        var rowIdx = i + 2;
+        var Data = sheet.getRange(rowIdx, 2).getValue();
+        var Left = sheet.getRange(rowIdx, 5).getValue();
+        var Current = parseInt(Left) - parseInt(command[2]);
+        sheet.getRange(rowIdx, 5).setValue(Current);
+        sheet2.appendRow([command[3], command[1], command[2], timestamp, "Book"]);
+        return Result1(Data, Current);
+      }
+    }
+  }
+
+  // Condition 03 - Return Equipment
+  else if (action == "Ereturn") {
+    for (var i = 0; i < values.length; i++) {
+      if (values[i][0] == command[1]) {
+        var rowIdx = i + 2;
+        var Data = sheet.getRange(rowIdx, 2).getValue();
+        var Left = sheet.getRange(rowIdx, 5).getValue();
+        var Current = parseInt(Left) + parseInt(command[2]);
+        sheet.getRange(rowIdx, 5).setValue(Current);
+        sheet2.appendRow([command[3], command[1], command[2], timestamp, "Return"]);
+        return Result1(Data, Current);
+      }
+    }
+  }
+
+  // Condition 04/05 - Room Management
+  else if (action == "Rbook" || action == "Rreturn") {
+    var isBooking = (action == "Rbook");
+    for (var i = 0; i < values.length; i++) {
+      if (values[i][0] == command[1]) {
+        var rowIdx = i + 2;
+        var Data = sheet.getRange(rowIdx, 2).getValue();
+        var status = isBooking ? "Occupied" : "Unoccupied";
+        var logAction = isBooking ? "Enter" : "Leave";
+        
+        sheet3.appendRow([command[2], command[1], timestamp, logAction]);
+        sheet.getRange(rowIdx, 5).setValue(status);
+        return Result1(Data, status);
+      }
+    }
+  }
+
+  // Condition 06 - Logs
+  else if (action == "Elog" || action == "Rlog") {
+    var userToFind = command[1];
+    var targetValues = (action == "Elog") ? values2 : values3;
+    var summary = "Logs for " + userToFind + ":\n";
+    var found = false;
+
+    for (var i = 0; i < targetValues.length; i++) {
+      if (targetValues[i][0] == userToFind) {
+        summary += "- " + targetValues[i][3] + ": " + targetValues[i][4] + " " + (targetValues[i][2] || "") + " " + targetValues[i][1] + "\n";
+        found = true;
+      }
+    }
+    return Result3(found ? summary : "No logs found for: " + userToFind);
+  }
+}
