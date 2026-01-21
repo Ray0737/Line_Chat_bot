@@ -1,4 +1,91 @@
-# LINE CHATBOT
+# 📦 Inventory & Room Management Chatbot
+
+A robust **Google Apps Script** backend for a **LINE Chatbot** integrated via **Dialogflow**. This system allows users to manage equipment inventory and room bookings in real-time using a simple Google Sheet as the database.
+
+
+
+---
+
+## 🚀 Key Features
+
+* **Real-time Inventory:** Check stock levels and item details via LINE Flex Messages.
+* **Automated Stock Management:** Borrowing (`Ebook`) and returning (`Ereturn`) automatically updates quantities.
+* **Room Management:** Toggle room status between "Occupied" and "Unoccupied."
+* **Fail-Safe Validation:** A built-in logic gate ensures no data is written to the log if the User ID is missing or remains as a placeholder.
+* **Activity Logs:** Instant retrieval of transaction history for specific users.
+
+---
+
+## 🛠️ Commands & Usage
+
+The bot responds to comma-separated commands. The UI provides buttons, but users can also type manually:
+
+### Equipment Commands
+| Command | Format | Action |
+| :--- | :--- | :--- |
+| **Check** | `Check,ITEM_ID` | Displays item image, name, and current stock. |
+| **Borrow** | `Ebook,ITEM_ID,QTY,USER_ID` | Reduces stock and logs the "Book" action. |
+| **Return** | `Ereturn,ITEM_ID,QTY,USER_ID` | Increases stock and logs the "Return" action. |
+| **History** | `Elog,USER_ID` | Returns a list of all equipment borrowed by the user. |
+
+### Room Commands
+| Command | Format | Action |
+| :--- | :--- | :--- |
+| **Book Room** | `Rbook,ROOM_ID,USER_ID` | Sets room status to "Occupied" and logs "Enter". |
+| **Leave Room** | `Rreturn,ROOM_ID,USER_ID` | Sets room status to "Unoccupied" and logs "Leave". |
+| **Room Logs** | `Rlog,USER_ID` | Returns a history of room entries/exits for the user. |
+
+---
+
+## 🛡️ The Fail-Safe Logic
+
+To prevent "dirty data" (logs containing the text "USER" or empty fields), the script performs a pre-check before any sheet operations occur:
+
+1.  **Intercepts** the `doPost` request.
+2.  **Validates** that the `USER_ID` index in the command array is not empty and has been changed from the default placeholder.
+3.  **Aborts** the operation if invalid, sending a warning message back to the user without touching the Spreadsheet or changing inventory counts.
+
+> **Note:** If the validation fails, the `appendRow` and `setValue` functions are never triggered.
+
+---
+
+## ⚙️ Setup Instructions
+
+### 1. Spreadsheet Setup
+Create a Google Sheet with three specific tabs:
+1.  **`Inventory`**: Columns: ID, Name, Category, Description, **Quantity (Col 5)**, **Image URL (Col 6)**.
+2.  **`Equip Log`**: Columns: User ID, Item ID, Qty, Timestamp, Action.
+3.  **`Room Log`**: Columns: User ID, Room ID, Timestamp, Action.
+
+### 2. Deployment
+1.  Open **Extensions > Apps Script** in your Google Sheet.
+2.  Paste the code from `Code.gs`.
+3.  Replace the `ss` variable URL with your spreadsheet URL.
+4.  Click **Deploy > New Deployment**.
+    * **Type:** Web App
+    * **Execute as:** Me
+    * **Who has access:** Anyone
+5.  Copy the **Web App URL**.
+
+### 3. Dialogflow Integration
+1.  Go to your **Dialogflow Console**.
+2.  Navigate to **Fulfillment**.
+3.  Enable **Webhook** and paste your Apps Script Web App URL.
+4.  Ensure your Intents have "Enable webhook call for this intent" toggled on.
+
+---
+
+## 📊 Database Schema
+
+
+
+---
+
+## 📜 License
+This project is open-source. Feel free to modify it for your organization's needs.
+
+
+# CHATBOT MANUAL (LINE)
 
 This repository contains the documentation and boilerplate code to build a smart chatbot that uses **Dialogflow** for Natural Language Processing (NLP), **LINE Messenger** as the interface, and **Google Sheets** as a lightweight database. 
 
