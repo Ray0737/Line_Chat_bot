@@ -106,7 +106,7 @@ function doPost(e) {
       return Result1(Data,Current); // FUNCTION (1) CALLER
       }
     }
-  } else if (command[0] == "ELog") { 
+  } else if (command[0] == "Elog") { 
     var userToFind = command[1];
     var summary = "Logs for " + userToFind + ":\n";
     var found = false;
@@ -131,7 +131,7 @@ function doPost(e) {
 
     return Result3(summary); 
 
-  } else if (command[0] == "RLog") { 
+  } else if (command[0] == "Rlog") { 
     var userToFind = command[1];
     var summary = "Logs for " + userToFind + ":\n";
     var found = false;
