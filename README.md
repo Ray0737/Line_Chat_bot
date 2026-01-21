@@ -75,14 +75,6 @@ Create a Google Sheet with three specific tabs:
 
 ---
 
-## 📊 Database Schema
-
-
-
----
-
-## 📜 License
-This project is open-source. Feel free to modify it for your organization's needs.
 
 
 # CHATBOT MANUAL (LINE)
