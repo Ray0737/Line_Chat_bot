@@ -1,13 +1,25 @@
 var ss = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/104Hp8VjSYv7ilMI-3D8ZwrL65FIl4gnMqmp8dXN3zWk/edit?usp=sharing");
-var sheet = ss.getSheetByName("STOCK");
+var sheet = ss.getSheetByName("Inventory");
+var sheet2 = ss.getSheetByName("Equip Log");
+var sheet3 = ss.getSheetByName("Room Log");
+
 function doPost(e) {
   var data = JSON.parse(e.postData.contents);
   var userMsg = data.originalDetectIntentRequest.payload.data.message.text;
   var values = sheet.getRange(2, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
+  var values2 = sheet2.getRange(2, 1, sheet2.getLastRow(), sheet2.getLastColumn()).getValues();
+  var values3 = sheet3.getRange(2, 1, sheet3.getLastRow(), sheet3.getLastColumn()).getValues();
+
   var command = userMsg.split(',');
+  var now = new Date();
+  var timestamp = Utilities.formatDate(now, "GMT+7", "dd/MM/yyyy HH:mm:ss");
   
   // WARNING: WATCHOUT FOR SPACING AND CAPITAL LETTERS
-  // INPUT( CMD: Ebook/Ereturn/check/Rbook/Rreturn | ID: P001,B001,R1909 | Amount:   )
+  // INPUT- CMD/ID/QTY/USER
+  // CMD: Ebook/Ereturn/check/Rbook/Rreturn/Elog/Rlog
+  // ID: B001-003 | S001-003 | M001 | C001 | R1909,1908,1906,1904,1903,1902,1901
+  // QTY: 0-Anan
+  // USER: 24329
 
 
 //------------------------------- CONDITION -------------------------------
@@ -40,6 +52,7 @@ function doPost(e) {
       var Left = sheet.getRange(i,5).getValue();
       var Current = parseInt(Left) - parseInt(command[2]);
       sheet.getRange(i,5).setValue(Current).toString();
+      sheet2.appendRow([command[3],command[1],command[2],timestamp,"Book"]);
       return Result1(Data,Current); // FUNCTION (1) CALLER
       }
     }
@@ -55,6 +68,7 @@ function doPost(e) {
       var Left = sheet.getRange(i,5).getValue();
       var Current = parseInt(Left) + parseInt(command[2]);
       sheet.getRange(i,5).setValue(Current).toString();
+      sheet2.appendRow([command[3],command[1],command[2],timestamp,"Return"]);
       return Result1(Data,Current); // FUNCTION (1) CALLER
       }
     }
@@ -68,6 +82,7 @@ function doPost(e) {
       var Data = sheet.getRange(i, 2).getValue();
       var Current = sheet.getRange(i,5).getValue();
       if (Current == "Unoccupied"){
+        sheet3.appendRow([command[2],command[1],timestamp,"Enter"]);
         sheet.getRange(i,5).setValue("Occupied").toString();
         var Current = "Occupied"
       }
@@ -84,12 +99,62 @@ function doPost(e) {
       var Data = sheet.getRange(i, 2).getValue();
       var Current = sheet.getRange(i,5).getValue();
       if (Current == "Occupied"){
+        sheet3.appendRow([command[2],command[1],timestamp,"Leave"]);
         sheet.getRange(i,5).setValue("Unoccupied").toString();
         var Current = "Unoccupied"
       }
       return Result1(Data,Current); // FUNCTION (1) CALLER
       }
     }
+  } else if (command[0] == "ELog") { 
+    var userToFind = command[1];
+    var summary = "Logs for " + userToFind + ":\n";
+    var found = false;
+
+    // Iterate through all rows in sheet2 (values2)
+    for (var i = 0; i < values2.length; i++) {
+      // Check if the name in Column A (index 0) matches the command
+      if (values2[i][0] == userToFind) {
+        var equipID = values2[i][1];
+        var qty = values2[i][2];
+        var time = values2[i][3];
+        var status = values2[i][4];
+
+        summary += "- " + time + ": " + status + " " + qty + "x " + equipID + "\n";
+        found = true;
+      }
+    }
+
+    if (!found) {
+      summary = "No logs found for user: " + userToFind;
+    }
+
+    return Result3(summary); 
+
+  } else if (command[0] == "RLog") { 
+    var userToFind = command[1];
+    var summary = "Logs for " + userToFind + ":\n";
+    var found = false;
+
+    // Iterate through all rows in sheet2 (values2)
+    for (var i = 0; i < values3.length; i++) {
+      // Check if the name in Column A (index 0) matches the command
+      if (values3[i][0] == userToFind) {
+        var equipID = values3[i][1];
+        var qty = values3[i][2];
+        var time = values3[i][3];
+        var status = values3[i][4];
+
+        summary += "- " + time + ": " + status + " " + qty + "x " + equipID + "\n";
+        found = true;
+      }
+    }
+
+    if (!found) {
+      summary = "No logs found for user: " + userToFind;
+    }
+
+    return Result3(summary); 
   }
 }  
 
@@ -105,7 +170,30 @@ function Result0(){
               "line": {
                 "type": "text",
                 "altText":"Entry Saved",
-                "text": "INPUT-SYNTAX: (CMD,ID,QTY)| Eg: (Ebook/Ereturn/check/Rbook/Rreturn),(ID: P001,B001,R1909),(Amount: )"
+                "text": "  // WARNING: WATCHOUT FOR SPACING AND CAPITAL LETTERS | INPUT- CMD/ID/QTY/USER | CMD: Ebook/Ereturn/check/Rbook/Rreturn/Elog/Rlog | ID: B001-003 | S001-003 | M001 | C001 | R1909,1908,1906,1904,1903,1902,1901 | QTY: 0-Anan | USER: 24329"
+
+          }
+        }
+      }
+    ]
+  }
+  var replyJSON = ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  return replyJSON;
+}
+
+
+//------------------------------- Intro UI -------------------------------
+var summary
+function Result3(summary){
+  var result = {
+  "fulfillmentMessages": [
+      {
+          "platform": "line",
+          "type": 4,
+          "payload": {
+              "line": {
+                "type": "text",
+                "text": summary
 
           }
         }
