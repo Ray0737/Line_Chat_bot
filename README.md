@@ -58,7 +58,7 @@ function doPost(e) {
     "fulfillmentMessages": [
       {
         "text": {
-          "text": ["I've recorded your message in the spreadsheet! ✅"]
+          "text": ["I've recorded your message in the spreadsheet! "]
         }
       }
     ]
