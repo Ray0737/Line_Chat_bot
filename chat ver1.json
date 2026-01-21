@@ -169,8 +169,7 @@ function Result0(){
           "payload": {
               "line": {
                 "type": "text",
-                "altText":"Entry Saved",
-                "text": "  // WARNING: WATCHOUT FOR SPACING AND CAPITAL LETTERS | INPUT- CMD/ID/QTY/USER | CMD: Ebook/Ereturn/check/Rbook/Rreturn/Elog/Rlog | ID: B001-003 | S001-003 | M001 | C001 | R1909,1908,1906,1904,1903,1902,1901 | QTY: 0-Anan | USER: 24329"
+                "text": "WARNING: WATCHOUT FOR SPACING AND CAPITAL LETTERS\n\nCOMMAND SYNTAX:\nCMD,ID,QTY,USER\n\nCMD: Ebook/Ereturn/check/Rbook/Rreturn/Elog/Rlog\n\nID: B001-003 | S001-003 | M001 | C001 | R1909,1908,1906,1904,1903,1902,1901\n\nQTY: 0-Anan | USER: 24329"
 
           }
         }
