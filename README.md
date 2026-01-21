@@ -45,25 +45,33 @@ This repository contains the documentation and boilerplate code to build a smart
 ## Sample Fulfillment Code (Google Apps Script)
 
 ```javascript
+
+var ss = SpreadsheetApp.openByUrl("...");
+var sheet = ss.getSheetByName("...");
 function doPost(e) {
-  const contents = JSON.parse(e.postData.contents);
-  const intentName = contents.queryResult.intent.displayName;
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  
-  // Example: Log every message to a sheet
-  const userMessage = contents.queryResult.queryText;
-  sheet.appendRow([new Date(), intentName, userMessage]);
-
-  const response = {
-    "fulfillmentMessages": [
-      {
-        "text": {
-          "text": ["I've recorded your message in the spreadsheet! "]
-        }
+  var data = JSON.parse(e.postData.contents);
+  var userMsg = data.originalDetectIntentRequest.payload.data.message.text;
+  var values = sheet.getRange(2, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
+  for (var i = 0; i < values.length; i++) {
+    if (values[i][0] == userMsg) {
+      i = i + 2;
+      var Data = sheet.getRange(i, 2).getValue();
+      var result = {
+        "fulfillmentMessages": [
+          {
+            "platform": "line",
+            "type": 4,
+            "payload": {
+              "line": {
+                "type": "text",
+                "text": Data
+              }
+            }
+          }
+        ]
       }
-    ]
-  };
-
-  return ContentService.createTextOutput(JSON.stringify(response))
-    .setMimeType(ContentService.MimeType.JSON);
+      var replyJSON = ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+      return replyJSON;
+    }
+  }
 }
