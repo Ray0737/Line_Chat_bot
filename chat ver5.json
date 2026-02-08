@@ -1,68 +1,82 @@
+/**
+ * DATABASE CONFIGURATION
+ * Connects to specific sheets within the Google Spreadsheet
+ */
 var ss = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/104Hp8VjSYv7ilMI-3D8ZwrL65FIl4gnMqmp8dXN3zWk/edit?usp=sharing");
-var sheet = ss.getSheetByName("Inventory");
-var sheet2 = ss.getSheetByName("Equip Log");
-var sheet3 = ss.getSheetByName("Room Log");
+var sheet  = ss.getSheetByName("Inventory"); // Main stock/room list
+var sheet2 = ss.getSheetByName("Equip Log");  // Records for borrowing/returning items
+var sheet3 = ss.getSheetByName("Room Log");   // Records for entering/leaving rooms
 
+/**
+ * MAIN WEBHOOK RECEIVER
+ * Triggered whenever the chatbot sends a POST request (user message)
+ */
 function doPost(e) {
+  // Parse incoming JSON data from Dialogflow/LINE
   var data = JSON.parse(e.postData.contents);
   var userMsg = data.originalDetectIntentRequest.payload.data.message.text;
   
+  // Pull all data from sheets into memory for faster processing
   var values = sheet.getRange(2, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
   var values2 = sheet2.getRange(2, 1, sheet2.getLastRow(), sheet2.getLastColumn()).getValues();
   var values3 = sheet3.getRange(2, 1, sheet3.getLastRow(), sheet3.getLastColumn()).getValues();
 
+  // Split user message by comma (Syntax: Command,Param1,Param2...)
   var command = userMsg.split(',');
   var now = new Date();
   var timestamp = Utilities.formatDate(now, "GMT+7", "dd/MM/yyyy HH:mm:ss");
 
-  // Condition 00 - Carousel Menu
+  // --- CONDITION 00: INITIAL MENU ---
   if (command[0] == "Start") {
-    return Result0(); 
+    return Result0(); // Returns the Carousel UI
   } 
 
-  // Condition 01 - Check Equipment
+  // --- CONDITION 01: CHECK STATUS ---
+  // Syntax: Check,ID
   else if (command[0] == "Check") {
     if (command.length < 2) return Result3("Error01: Missing ID.\nSyntax: Check,ID");
     for (var i = 0; i < values.length; i++) {
       if (values[i][0] == command[1]) {
         var rowIdx = i + 2;
-        var Data = sheet.getRange(rowIdx, 2).getValue();
-        var Pic = sheet.getRange(rowIdx, 6).getValue();
-        var Current = sheet.getRange(rowIdx, 5).getValue();
+        var Data = sheet.getRange(rowIdx, 2).getValue();    // Item Name
+        var Pic = sheet.getRange(rowIdx, 6).getValue();     // Image URL
+        var Current = sheet.getRange(rowIdx, 5).getValue(); // Qty or Status
         return Result2(Pic, Data, Current);
       }
     }
   }
 
-  // Condition 02 - Book Equipment
+  // --- CONDITION 02: BOOK EQUIPMENT ---
+  // Syntax: Equipment booking,ID,QTY,NAME
   else if (command[0] == "Equipment booking") {
-    if (command.length < 4) {
-      return Result3("Error02: Incomplete information.\nSyntax: " + command[0] + ",ID,QTY,NAME");
-    }
+    if (command.length < 4) return Result3("Error02: Incomplete info.\nSyntax: " + command[0] + ",ID,QTY,NAME");
+    
     for (var i = 0; i < values.length; i++) {
       if (values[i][0] == command[1]) {
         var rowIdx = i + 2;
         var Data = sheet.getRange(rowIdx, 2).getValue();
         var Left = sheet.getRange(rowIdx, 5).getValue();
-        var Current = parseInt(Left) - parseInt(command[2]);
-        sheet.getRange(rowIdx, 5).setValue(Current);
-        sheet2.appendRow([command[3], command[1], command[2], timestamp, "Book"]);
+        var Current = parseInt(Left) - parseInt(command[2]); // Subtract stock
+        
+        sheet.getRange(rowIdx, 5).setValue(Current); // Update Inventory
+        sheet2.appendRow([command[3], command[1], command[2], timestamp, "Book"]); // Log transaction
         return Result1(Data, Current);
       }
     }
   }
 
-  // Condition 03 - Return Equipment
+  // --- CONDITION 03: RETURN EQUIPMENT ---
+  // Syntax: Equipment return,ID,QTY,NAME
   else if (command[0] == "Equipment return") {
-    if (command.length < 4) {
-      return Result3("Error03: Incomplete information.\nSyntax: " + command[0] + ",ID,QTY,NAME");
-    }
+    if (command.length < 4) return Result3("Error03: Incomplete info.\nSyntax: " + command[0] + ",ID,QTY,NAME");
+    
     for (var i = 0; i < values.length; i++) {
       if (values[i][0] == command[1]) {
         var rowIdx = i + 2;
         var Data = sheet.getRange(rowIdx, 2).getValue();
         var Left = sheet.getRange(rowIdx, 5).getValue();
-        var Current = parseInt(Left) + parseInt(command[2]);
+        var Current = parseInt(Left) + parseInt(command[2]); // Add stock back
+        
         sheet.getRange(rowIdx, 5).setValue(Current);
         sheet2.appendRow([command[3], command[1], command[2], timestamp, "Return"]);
         return Result1(Data, Current);
@@ -70,11 +84,11 @@ function doPost(e) {
     }
   }
 
-  // Condition 04/05 - Room Management
+  // --- CONDITION 04/05: ROOM MANAGEMENT ---
+  // Syntax: Room book,ROOM_ID,NAME
   else if (command[0] == "Room book" || command[0] == "Room return") {
-    if (command.length < 3) {
-      return Result3("Error04/05: Missing user name.\nSyntax: " + command[0] + ",ROOM_ID,NAME");
-    }
+    if (command.length < 3) return Result3("Error04/05: Missing user name.\nSyntax: " + command[0] + ",ROOM_ID,NAME");
+    
     var isBooking = (command[0] == "Room book");
     for (var i = 0; i < values.length; i++) {
       if (values[i][0] == command[1]) {
@@ -83,16 +97,18 @@ function doPost(e) {
         var status = isBooking ? "Occupied" : "Unoccupied";
         var logAction = isBooking ? "Enter" : "Leave";
         
-        sheet3.appendRow([command[2], command[1], timestamp, logAction]);
-        sheet.getRange(rowIdx, 5).setValue(status);
+        sheet3.appendRow([command[2], command[1], timestamp, logAction]); // Log room entry
+        sheet.getRange(rowIdx, 5).setValue(status); // Update room status
         return Result1(Data, status);
       }
     }
   }
 
-  // Condition 06 - Logs
+  // --- CONDITION 06: VIEW LOGS ---
+  // Syntax: Equipment log,USER_ID
   else if (command[0] == "Equipment log" || command[0] == "Room log") {
     if (command.length < 2) return Result3("Error06: Missing User ID.\nSyntax: " + command[0] + ",USER_ID");
+    
     var userToFind = command[1];
     var targetValues = (command[0] == "Equipment log") ? values2 : values3;
     var summary = "Logs for " + userToFind + ":\n";
@@ -107,15 +123,17 @@ function doPost(e) {
     return Result3(found ? summary : "No logs found for: " + userToFind);
   }
 
-  // Condition 07 - Add New Object
+  // --- CONDITION 07: ADD NEW ITEM ---
+  // Syntax: Add,ID,NAME,QTY,ADMIN
   else if (command[0] == "Add") {
-    if (command.length < 5) return Result3("Error07: Missing info.\nSyntax: Add,New ID,NAME,QTY,ADMIN_NAME");
-    var newID = command[1];   // B004
-    var name = command[2];    // Microbit
-    var qty = command[3];     // 3
+    if (command.length < 5) return Result3("Error07: Missing info.\nSyntax: Add,ID,NAME,QTY,ADMIN_NAME");
+    
+    var newID = command[1];
+    var name = command[2];
+    var qty = command[3];
     var isDuplicate = false;
 
-    // 1. Check if the ID already exists to prevent duplicates
+    // Check if ID already exists
     for (var i = 0; i < values.length; i++) {
       if (values[i][0] == newID) {
         isDuplicate = true;
@@ -124,21 +142,20 @@ function doPost(e) {
     }
 
     if (isDuplicate) {
-      return Result3("Error07-1: ID " + newID + " already exists in inventory.");
+      return Result3("Error07-1: ID " + newID + " already exists.");
     } else {
-      // 2. Append new row: Col1=ID, Col2=Name, Col5=QTY (Standard Inventory structure)
-      // Note: We leave Col3 and Col4 empty based on your standard inventory layout
-      sheet.appendRow([newID, name, "N/A", "N/A", qty]);
-      sheet2.appendRow([command[4], command[1], command[3], timestamp, "Add"]);
-      
-      return Result3("✅ Added Successfully:\nID: " + newID + "\nName: " + name + "\nQty: " + qty);
+      sheet.appendRow([newID, name, "N/A", "N/A", qty]); // Col 1, 2, 5
+      sheet2.appendRow([command[4], newID, qty, timestamp, "Add"]);
+      return Result3("✅ Added Successfully:\nID: " + newID + "\nName: " + name);
     }
   }
-  
 }
 
-// ------------------- UI FUNCTIONS -------------------
+// ------------------- UI RESPONSE FUNCTIONS (LINE PAYLOADS) -------------------
 
+/**
+ * Result0: Generates a LINE Carousel menu with 3 categories
+ */
 function Result0() {
   var carouselPayload = {
     "type": "template",
@@ -149,43 +166,49 @@ function Result0() {
         {
           "thumbnailImageUrl": "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=500",
           "title": "Equipment",
-          "text": "Manage your inventory items\nEX: B001/S001/M001/C001",
+          "text": "Check, Borrow, or Return gear",
           "actions": [
-            { "type": "message", "label": "Check Item Syntax", "text": "Check,ID" },
-            { "type": "message", "label": "Borrow Item Syntax", "text": "Equipment book,ID,QTY,USER" },
-            { "type": "message", "label": "Return Item Syntax", "text": "Equipment return,ID,QTY,USER" }
+            { "type": "message", "label": "Check Item", "text": "Check,ID" },
+            { "type": "message", "label": "Borrow", "text": "Equipment book,ID,QTY,USER" },
+            { "type": "message", "label": "Return", "text": "Equipment return,ID,QTY,USER" }
           ]
         },
         {
           "thumbnailImageUrl": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=500",
           "title": "Room Booking",
-          "text": "Reserve or release rooms\nEX:R1909/R1908",
+          "text": "Reserve or release rooms",
           "actions": [
-            { "type": "message", "label": "Check Room Syntax", "text": "Check,ROOM_ID" },
-            { "type": "message", "label": "Book Room Syntax", "text": "Room book,ROOM_ID,USER" },
-            { "type": "message", "label": "Return Room Syntax", "text": "Room return,ROOM_ID,USER" }
+            { "type": "message", "label": "Check Room", "text": "Check,ROOM_ID" },
+            { "type": "message", "label": "Book Room", "text": "Room book,ROOM_ID,USER" },
+            { "type": "message", "label": "Return Room", "text": "Room return,ROOM_ID,USER" }
           ]
         },
         {
           "thumbnailImageUrl": "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500",
           "title": "Activity Logs",
-          "text": "Check your transaction history",
+          "text": "View transaction history",
           "actions": [
-            { "type": "message", "label": "Equip Logs Syntax", "text": "Equipment log,USER_ID" },
-            { "type": "message", "label": "Room Logs Syntax", "text": "Room log,USER_ID" }
+            { "type": "message", "label": "View Spreadsheet", "text": "https://docs.google.com/..." },
+            { "type": "message", "label": "Equipment Logs", "text": "Equipment log,USER_ID" },
+            { "type": "message", "label": "Room Logs", "text": "Room log,USER_ID" }
           ]
         }
       ]
     }
   };
-
   return buildReply(carouselPayload);
 }
 
+/**
+ * Result1: Simple Text confirmation for updates
+ */
 function Result1(Data, Current) {
   return buildReply({ "type": "text", "text": "✅ UPDATE SUCCESS\nITEM: " + Data + "\nSTATUS: " + Current });
 }
 
+/**
+ * Result2: Flex Message (Card) showing item image, name, and status
+ */
 function Result2(Pic, Data, Current) {
   var flex = {
     "type": "flex",
@@ -207,16 +230,21 @@ function Result2(Pic, Data, Current) {
   return buildReply(flex);
 }
 
+/**
+ * Result3: Generic text wrapper for error messages or logs
+ */
 function Result3(summary) {
   return buildReply({ "type": "text", "text": summary });
 }
 
-// Helper to wrap Line Payload for Dialogflow
+/**
+ * HELPER: Wraps LINE payloads into Dialogflow format and returns JSON
+ */
 function buildReply(linePayload) {
   var result = {
     "fulfillmentMessages": [{
       "platform": "line",
-      "type": 4,
+      "type": 4, // Custom payload type
       "payload": { "line": linePayload }
     }]
   };
