@@ -24,7 +24,7 @@ function doPost(e) {
   // Split user message by comma (Syntax: Command,Param1,Param2...)
   var command = userMsg.split(',');
   var now = new Date();
-  var timestamp = Utilities.formatDate(now, "GMT+7", "dd/MM/yyyy HH:mm:ss");
+  var timestamp = "'" + Utilities.formatDate(now, "GMT+7", "dd/MM/yyyy HH:mm:ss");
 
   // --- CONDITION 00: INITIAL MENU ---
   if (command[0] == "Start") {
