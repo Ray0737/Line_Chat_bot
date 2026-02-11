@@ -24,16 +24,16 @@ The bot responds to comma-separated commands. The UI provides buttons, but users
 | Command | Format | Action |
 | :--- | :--- | :--- |
 | **Check** | `Check,ITEM_ID` | Displays item image, name, and current stock. |
-| **Borrow** | `Ebook,ITEM_ID,QTY,USER_ID` | Reduces stock and logs the "Book" action. |
-| **Return** | `Ereturn,ITEM_ID,QTY,USER_ID` | Increases stock and logs the "Return" action. |
-| **History** | `Elog,USER_ID` | Returns a list of all equipment borrowed by the user. |
+| **Borrow** | `Equipment booking,ITEM_ID,QTY,USER_ID` | Reduces stock and logs the "Book" action. |
+| **Return** | `Equipment return,ITEM_ID,QTY,USER_ID` | Increases stock and logs the "Return" action. |
+| **History** | `Equipment log,USER_ID` | Returns a list of all equipment borrowed by the user. |
 
 ### Room Commands
 | Command | Format | Action |
 | :--- | :--- | :--- |
-| **Book Room** | `Rbook,ROOM_ID,USER_ID` | Sets room status to "Occupied" and logs "Enter". |
-| **Leave Room** | `Rreturn,ROOM_ID,USER_ID` | Sets room status to "Unoccupied" and logs "Leave". |
-| **Room Logs** | `Rlog,USER_ID` | Returns a history of room entries/exits for the user. |
+| **Book Room** | `Room book,ROOM_ID,USER_ID` | Sets room status to "Occupied" and logs "Enter". |
+| **Leave Room** | `Room return,ROOM_ID,USER_ID` | Sets room status to "Unoccupied" and logs "Leave". |
+| **Room Logs** | `Room log,USER_ID` | Returns a history of room entries/exits for the user. |
 
 ---
 
@@ -54,7 +54,7 @@ To prevent "dirty data" (logs containing the text "USER" or empty fields), the s
 ### 1. Spreadsheet Setup
 Create a Google Sheet with three specific tabs:
 1.  **`Inventory`**: Columns: ID, Name, Category, Description, **Quantity (Col 5)**, **Image URL (Col 6)**.
-2.  **`Equip Log`**: Columns: User ID, Item ID, Qty, Timestamp, Action.
+2.  **`Equipment Log`**: Columns: User ID, Item ID, Qty, Timestamp, Action.
 3.  **`Room Log`**: Columns: User ID, Room ID, Timestamp, Action.
 
 ### 2. Deployment
