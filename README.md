@@ -9,7 +9,7 @@ A robust **Google Apps Script** backend for a **LINE Chatbot** integrated via **
 ## 🚀 Key Features
 
 * **Real-time Inventory:** Check stock levels and item details via LINE Flex Messages.
-* **Automated Stock Management:** Borrowing (`Ebook`) and returning (`Ereturn`) automatically updates quantities.
+* **Automated Stock Management:** Borrowing (`Equipment booking`) and returning (`Equipment return`) automatically updates quantities.
 * **Room Management:** Toggle room status between "Occupied" and "Unoccupied."
 * **Fail-Safe Validation:** A built-in logic gate ensures no data is written to the log if the User ID is missing or remains as a placeholder.
 * **Activity Logs:** Instant retrieval of transaction history for specific users.
