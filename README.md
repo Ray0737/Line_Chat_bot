@@ -1,4 +1,4 @@
-# 📦 Inventory & Room Management Chatbot
+# Classwork | Intro to AI Chat Bot
 
 A robust **Google Apps Script** backend for a **LINE Chatbot** integrated via **Dialogflow**. This system allows users to manage equipment inventory and room bookings in real-time using a simple Google Sheet as the database.
 
