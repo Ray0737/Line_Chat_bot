@@ -1,156 +1,103 @@
-# Inventory Tracker Chat Bot
+# Classwork | LINE Inventory Tracker Chatbot
 
-A robust **Google Apps Script** backend for a **LINE Chatbot** integrated via **Dialogflow**. This system allows users to manage equipment inventory and room bookings in real-time using a simple Google Sheet as the database.
-
-
+A **LINE Messenger chatbot** for managing equipment inventory and room bookings in real-time, built with **Google Apps Script**, **Dialogflow**, and **Google Sheets** as the backend database.
 
 ---
 
-## 🚀 Key Features
+## Overview
 
-* **Real-time Inventory:** Check stock levels and item details via LINE Flex Messages.
-* **Automated Stock Management:** Borrowing (`Equipment booking`) and returning (`Equipment return`) automatically updates quantities.
-* **Room Management:** Toggle room status between "Occupied" and "Unoccupied."
-* **Fail-Safe Validation:** A built-in logic gate ensures no data is written to the log if the User ID is missing or remains as a placeholder.
-* **Activity Logs:** Instant retrieval of transaction history for specific users.
-
----
-
-## 🛠️ Commands & Usage
-
-The bot responds to comma-separated commands. The UI provides buttons, but users can also type manually:
-
-### Equipment Commands
-| Command | Format | Action |
-| :--- | :--- | :--- |
-| **Check** | `Check,ITEM_ID` | Displays item image, name, and current stock. |
-| **Borrow** | `Equipment booking,ITEM_ID,QTY,USER_ID` | Reduces stock and logs the "Book" action. |
-| **Return** | `Equipment return,ITEM_ID,QTY,USER_ID` | Increases stock and logs the "Return" action. |
-| **History** | `Equipment log,USER_ID` | Returns a list of all equipment borrowed by the user. |
-
-### Room Commands
-| Command | Format | Action |
-| :--- | :--- | :--- |
-| **Book Room** | `Room book,ROOM_ID,USER_ID` | Sets room status to "Occupied" and logs "Enter". |
-| **Leave Room** | `Room return,ROOM_ID,USER_ID` | Sets room status to "Unoccupied" and logs "Leave". |
-| **Room Logs** | `Room log,USER_ID` | Returns a history of room entries/exits for the user. |
-
----
-
-## 🛡️ The Fail-Safe Logic
-
-To prevent "dirty data" (logs containing the text "USER" or empty fields), the script performs a pre-check before any sheet operations occur:
-
-1.  **Intercepts** the `doPost` request.
-2.  **Validates** that the `USER_ID` index in the command array is not empty and has been changed from the default placeholder.
-3.  **Aborts** the operation if invalid, sending a warning message back to the user without touching the Spreadsheet or changing inventory counts.
-
-> **Note:** If the validation fails, the `appendRow` and `setValue` functions are never triggered.
-
----
-
-## ⚙️ Setup Instructions
-
-### 1. Spreadsheet Setup
-Create a Google Sheet with three specific tabs:
-1.  **`Inventory`**: Columns: ID, Name, Category, Description, **Quantity (Col 5)**, **Image URL (Col 6)**.
-2.  **`Equipment Log`**: Columns: User ID, Item ID, Qty, Timestamp, Action.
-3.  **`Room Log`**: Columns: User ID, Room ID, Timestamp, Action.
-
-### 2. Deployment
-1.  Open **Extensions > Apps Script** in your Google Sheet.
-2.  Paste the code from `Code.gs`.
-3.  Replace the `ss` variable URL with your spreadsheet URL.
-4.  Click **Deploy > New Deployment**.
-    * **Type:** Web App
-    * **Execute as:** Me
-    * **Who has access:** Anyone
-5.  Copy the **Web App URL**.
-
-### 3. Dialogflow Integration
-1.  Go to your **Dialogflow Console**.
-2.  Navigate to **Fulfillment**.
-3.  Enable **Webhook** and paste your Apps Script Web App URL.
-4.  Ensure your Intents have "Enable webhook call for this intent" toggled on.
-
----
-
-
-
-# CHATBOT MANUAL (LINE)
-
-This repository contains the documentation and boilerplate code to build a smart chatbot that uses **Dialogflow** for Natural Language Processing (NLP), **LINE Messenger** as the interface, and **Google Sheets** as a lightweight database. 
+This project was the culminating assignment for the E-AI chatbot module. The bot allows users to check, borrow, and return equipment, manage room availability, view activity logs, and add new inventory — all through natural conversation on LINE Messenger.
 
 ---
 
 ## System Architecture
 
-1.  **User** sends a message to the LINE Official Account.
-2.  **LINE** triggers the **Dialogflow Integration**.
-3.  **Dialogflow** identifies the intent and sends a payload to the **Fulfillment Webhook**.
-4.  **Google Apps Script** (the webhook) processes the data and reads/writes to **Google Sheets**.
-5.  The response is sent back through the chain to the User.
+```
+User (LINE) → LINE Messaging API → Dialogflow (NLP) → Google Apps Script (Webhook) → Google Sheets (Database)
+```
+
+1. A user sends a message to the LINE Official Account.
+2. LINE forwards the message to **Dialogflow**, which identifies the intent.
+3. Dialogflow triggers the **fulfillment webhook** (Google Apps Script).
+4. The script reads/writes to **Google Sheets** and returns a response (text, Flex Message, or Carousel).
 
 ---
 
-## Getting Started
+## Key Features
 
-### 1. LINE Developers Console
-* Create a **Messaging API** channel at [LINE Developers](https://developers.line.biz/).
-* Issue a **Channel Access Token** (long-lived).
-* Keep your **Channel Secret** handy.
-
-### 2. Dialogflow (ES) Setup
-* Create an agent in the [Dialogflow Console](https://dialogflow.cloud.google.com/).
-* Navigate to **Integrations** > **LINE**.
-* Enter your Channel ID, Channel Secret, and Access Token.
-* **Important:** Copy the `Webhook URL` provided by Dialogflow and paste it into the **Messaging API** settings in your LINE Developers Console.
-
-### 3. Google Sheets & Apps Script
-* Create a new Google Sheet.
-* Go to **Extensions** > **Apps Script**.
-* Paste the fulfillment code (see `code.gs` in this repo).
-* Click **Deploy** > **New Deployment** > **Web App**.
-* **Set Access to:** "Anyone".
-* Copy the **Web App URL**.
-
-### 4. Enable Fulfillment
-* In Dialogflow, go to **Fulfillment** in the left sidebar.
-* Enable **Webhook**, paste your Google Apps Script URL, and click **Save**.
-* In your specific **Intents**, scroll to the bottom and toggle "Enable webhook call for this intent."
+| Feature | Description |
+| :--- | :--- |
+| **Real-time Inventory Check** | Query item stock levels with image and status via LINE Flex Messages. |
+| **Equipment Booking & Return** | Automatically adjusts stock quantities and logs every transaction with timestamps. |
+| **Room Management** | Toggle room status between "Occupied" and "Unoccupied" with entry/exit logging. |
+| **Activity Logs** | Retrieve transaction history for any user ID — filterable by equipment or room. |
+| **Add New Items** | Admin-level command to register new inventory items with duplicate-ID protection. |
+| **Fail-Safe Validation** | Pre-checks ensure User ID is valid before any database write occurs. |
+| **Carousel Menu UI** | An interactive card-based menu displayed on bot start for quick command access. |
 
 ---
 
-## Sample Fulfillment Code (Google Apps Script)
+## Commands & Syntax
 
-```javascript
+### Equipment
+| Command | Syntax | Action |
+| :--- | :--- | :--- |
+| Check | `Check,ITEM_ID` | Shows item image, name, and current stock. |
+| Borrow | `Equipment booking,ITEM_ID,QTY,USER_ID` | Deducts stock and logs a "Book" action. |
+| Return | `Equipment return,ITEM_ID,QTY,USER_ID` | Adds stock back and logs a "Return" action. |
+| Logs | `Equipment log,USER_ID` | Displays the user's equipment transaction history. |
+| Add | `Add,ID,NAME,QTY,ADMIN_NAME` | Registers a new item (admin only). |
 
-var ss = SpreadsheetApp.openByUrl("...");
-var sheet = ss.getSheetByName("...");
-function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
-  var userMsg = data.originalDetectIntentRequest.payload.data.message.text;
-  var values = sheet.getRange(2, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
-  for (var i = 0; i < values.length; i++) {
-    if (values[i][0] == userMsg) {
-      i = i + 2;
-      var Data = sheet.getRange(i, 2).getValue();
-      var result = {
-        "fulfillmentMessages": [
-          {
-            "platform": "line",
-            "type": 4,
-            "payload": {
-              "line": {
-                "type": "text",
-                "text": Data
-              }
-            }
-          }
-        ]
-      }
-      var replyJSON = ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
-      return replyJSON;
-    }
-  }
-}
+### Room
+| Command | Syntax | Action |
+| :--- | :--- | :--- |
+| Book | `Room book,ROOM_ID,USER_ID` | Sets room to "Occupied" and logs "Enter". |
+| Leave | `Room return,ROOM_ID,USER_ID` | Sets room to "Unoccupied" and logs "Leave". |
+| Logs | `Room log,USER_ID` | Displays the user's room entry/exit history. |
+
+---
+
+## Repository Structure
+
+| File | Description |
+| :--- | :--- |
+| `Chat Prototype.txt` | Early prototype script — basic stock add/remove with Flex Message card response. Served as proof-of-concept for the Dialogflow-to-Sheets pipeline. |
+| `Chat Final Task (MAIN).txt` | The complete production script with all 7 command handlers, carousel UI, error handling, modular response builders (`Result0`–`Result3`), and timestamp logging. |
+| `Chat Final Task (1-5).txt` | Incremental development versions showing the evolution from prototype to final. |
+| `Line QR.png` | QR code for the LINE Official Account. |
+| `Spreadsheet.png` | Screenshot of the Google Sheets database structure. |
+
+---
+
+## How It Was Built
+
+- **Backend:** Google Apps Script (JavaScript) deployed as a Web App.
+- **NLP Engine:** Dialogflow ES — handles intent recognition and routes commands as comma-separated strings.
+- **Database:** Google Sheets with 3 tabs: `Inventory` (stock data + image URLs), `Equip Log` (borrow/return records), and `Room Log` (room entry/exit records).
+- **Frontend:** LINE Messaging API — responses rendered as Flex Messages (rich cards) and Carousel templates.
+- **Development Process:** Started with a simple prototype (`Chat Prototype.txt`) handling only add/remove stock with a Flex card response, then iteratively expanded through 5 versions into the final multi-feature system with error handling, input validation, and modular response functions.
+
+---
+
+## Setup Instructions
+
+### 1. Google Sheets
+Create a spreadsheet with three tabs:
+- **Inventory**: `ID | Name | Category | Description | Quantity | Image URL`
+- **Equip Log**: `User ID | Item ID | Qty | Timestamp | Action`
+- **Room Log**: `User ID | Room ID | Timestamp | Action`
+
+### 2. Google Apps Script
+1. Open **Extensions > Apps Script** in the spreadsheet.
+2. Paste the code from `Chat Final Task (MAIN).txt`.
+3. Update the spreadsheet URL in the `ss` variable.
+4. Deploy as **Web App** (Execute as: Me, Access: Anyone).
+
+### 3. Dialogflow
+1. Create an agent at [Dialogflow Console](https://dialogflow.cloud.google.com/).
+2. Enable **LINE Integration** with your Channel ID, Secret, and Access Token.
+3. Enable **Fulfillment Webhook** with the Apps Script Web App URL.
+
+### 4. LINE Developers
+1. Create a Messaging API channel at [LINE Developers](https://developers.line.biz/).
+2. Paste the Dialogflow Webhook URL into the channel settings.
